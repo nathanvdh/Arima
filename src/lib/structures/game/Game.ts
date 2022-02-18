@@ -118,7 +118,7 @@ export abstract class Game {
 		return Promise.all([this.queue.next(), interaction.editReply({ embeds: [embed] })]);
 	}
 
-	// This may become abstract later if the different modes should score differently
+	// This may become abstract later if the different modes should score differently.
 	@UseRequestContext()
 	public async end(reason: GameEndReason, sendFn: (options: MessageOptions) => Promise<unknown> = this.textChannel.send.bind(this.textChannel)) {
 		container.games.delete(this.guild.id);
@@ -137,9 +137,9 @@ export abstract class Game {
 		if (reason !== GameEndReason.TextChannelDeleted) {
 			const descriptions = {
 				[GameEndReason.GoalMet]: `The goal of **${this.goal}** 🥅 was hit!`,
-				[GameEndReason.HostLeft]: `The game ended because the host left the voice channel 😓`,
-				[GameEndReason.PlaylistEnded]: `We ran through every song in the playlist! 🎶`,
-				[GameEndReason.Other]: `Good game! 🥳`
+				[GameEndReason.HostLeft]: 'The game ended because the host left the voice channel 😓',
+				[GameEndReason.PlaylistEnded]: 'We ran through every song in the playlist! 🎶',
+				[GameEndReason.Other]: 'Good game! 🥳'
 			};
 
 			const embed = createEmbed(descriptions[reason])
@@ -216,20 +216,20 @@ export abstract class Game {
 		}
 	}
 
-	// These might be changed from abstract if it turns out there is common behaviour between the sub classes
+	// These might be changed from abstract if it turns out there is common behaviour between the sub classes.
 	/**
-	 * Handles a single guess in the form of a Message
+	 * Handles a single guess in the form of a Message.
 	 */
 	public abstract guess(guessMessage: Message): Promise<void>;
 
 	/**
-	 * Handles game-specific behaviour for when the track ends
+	 * Handles game-specific behaviour for when the track ends.
 	 */
 	public abstract onTrackEnd(): Promise<void>;
 
 	/**
-	 * Appends user to first guessedArtist list they haven't guessed
-	 * Returns true if a player guesses the primary artist
+	 * Appends user to first guessedArtist list they haven't guessed.
+	 * @returns true if a player guesses the primary artist.
 	 */
 	protected processArtistGuess(guess: string, user: Snowflake) {
 		for (const [artist, guessers] of this.round.artistGuessers.entries()) {
@@ -248,23 +248,22 @@ export abstract class Game {
 	}
 
 	/**
-	 * Appends user to guessedSong list if they haven't guessed it
-	 * Returns true if the player guesses the song name
+	 * Appends user to guessedSong list if they haven't guessed it.
+	 * @returns true if the player guesses the song name.
 	 */
 	protected processSongGuess(guess: string, user: Snowflake) {
-		// Don't process if they've already guessed it
-		if (this.round.songGuessers.includes(user)) {
+		const { validSongVariations, songGuessers } = this.round;
+
+		// Don't process if they've already guessed it.
+		if (songGuessers.includes(user)) {
 			return false;
 		}
 
 		// Try a bunch of different variations to try to match the most accurate track name.
-		const { validSongVariations } = this.round;
-
 		// The guess is valid if it's an exact match or very close to any variation.
 		const match = validSongVariations.includes(guess) || validSongVariations.some((str) => jaroWinkler(guess, str) >= kGuessThreshold);
 		if (match) {
-			// eslint-disable-next-line unicorn/consistent-destructuring
-			this.round.songGuessers.push(user);
+			songGuessers.push(user);
 		}
 
 		return match;
